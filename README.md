@@ -1,4 +1,4 @@
-# Toilet Roll
+# Grid Based Fluid Simulation
 *Josh Bailey*<br />
 *Simulation.*<br />
 *NCCA, Bournemouth University.*<br />

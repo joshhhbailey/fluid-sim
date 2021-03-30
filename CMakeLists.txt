@@ -22,10 +22,19 @@ find_package(sdl2-ttf CONFIG REQUIRED)
 # Set the name of the executable we want to build
 add_executable(${TargetName})
 
+include_directories(
+    "${CMAKE_SOURCE_DIR}/src"
+    "${CMAKE_SOURCE_DIR}/include"
+    )
+
 target_sources(${TargetName} PRIVATE
     # .cpp
-    ${PROJECT_SOURCE_DIR}/src/main.cpp  
+    ${PROJECT_SOURCE_DIR}/src/main.cpp
+    ${PROJECT_SOURCE_DIR}/src/SDLScene.cpp
+    ${PROJECT_SOURCE_DIR}/src/Fluid.cpp
     # .h
+    ${PROJECT_SOURCE_DIR}/include/SDLScene.h
+    ${PROJECT_SOURCE_DIR}/include/Fluid.h
     # ...
 )
 
