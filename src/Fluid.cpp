@@ -36,13 +36,13 @@ void Fluid::AddVelocity(int _xPos, int _yPos, float _amountX, float _amountY)
     m_yVel[GetGridIndex(_xPos, _yPos)] += _amountY;
 }
 
-void Fluid::Diffuse(int _b, std::vector<float> _x, std::vector<float> _xPrev, float _amount, float _timestep, int _iterations, int _gridDimensions)
+void Fluid::Diffuse(int _b, std::vector<float>& _x, std::vector<float>& _xPrev, float _amount, float _timestep, int _iterations, int _gridDimensions)
 {
     float a = _timestep * _amount * (_gridDimensions - 2) * (_gridDimensions - 2);
     LinearSolve(_b, _x, _xPrev, a, 1 + 6 * a, _iterations, _gridDimensions);
 }
 
-void Fluid::LinearSolve(int _b, std::vector<float> _x, std::vector<float> _xPrev, float _a, float _c, int _iterations, int _gridDimensions)
+void Fluid::LinearSolve(int _b, std::vector<float>& _x, std::vector<float>& _xPrev, float _a, float _c, int _iterations, int _gridDimensions)
 {
     float cRecip = 1.0f / _c;
     for (int k = 0; k < _iterations; ++k)
@@ -64,7 +64,7 @@ void Fluid::LinearSolve(int _b, std::vector<float> _x, std::vector<float> _xPrev
     }
 }
 
-void Fluid::Project(std::vector<float> _xVel, std::vector<float> _yVel, std::vector<float> _p, std::vector<float> _div, int _iterations, int _gridDimensions)
+void Fluid::Project(std::vector<float>& _xVel, std::vector<float>& _yVel, std::vector<float>& _p, std::vector<float>& _div, int _iterations, int _gridDimensions)
 {
     for (int j = 1; j < _gridDimensions - 1; ++j)
     {
@@ -97,7 +97,7 @@ void Fluid::Project(std::vector<float> _xVel, std::vector<float> _yVel, std::vec
     SetBounds(2, _yVel, _gridDimensions);
 }
 
-void Fluid::Advect(int _b, std::vector<float> _d, std::vector<float> _d0,  std::vector<float> _xVel, std::vector<float> _yVel, float _timeStep, int _gridDimensions)
+void Fluid::Advect(int _b, std::vector<float>& _d, std::vector<float>& _d0,  std::vector<float>& _xVel, std::vector<float>& _yVel, float _timeStep, int _gridDimensions)
 {
     float i0, i1, j0, j1;
     
@@ -163,7 +163,7 @@ void Fluid::Advect(int _b, std::vector<float> _d, std::vector<float> _d0,  std::
     SetBounds(_b, _d, _gridDimensions);
 }
 
-void Fluid::SetBounds(int _b, std::vector<float> _x, int _gridDimensions)
+void Fluid::SetBounds(int _b, std::vector<float>& _x, int _gridDimensions)
 {
     for (int i = 1; i < _gridDimensions - 1; ++i)
     {
@@ -184,20 +184,20 @@ void Fluid::SetBounds(int _b, std::vector<float> _x, int _gridDimensions)
 
 void Fluid::Update()
 {
-    float timeStep = m_timeStep;
-    int gridDimensions = m_gridDimensions;
-    float diffusion = m_diffusion;
-    float viscosity = m_viscosity;
+    float& timeStep = m_timeStep;
+    int& gridDimensions = m_gridDimensions;
+    float& diffusion = m_diffusion;
+    float& viscosity = m_viscosity;
 
     // Density
-    std::vector<float> prevDensity = m_prevDensity;
-    std::vector<float> density = m_density;
+    std::vector<float>& prevDensity = m_prevDensity;
+    std::vector<float>& density = m_density;
 
     // Velocity
-    std::vector<float> xVelPrev = m_xVelPrev;
-    std::vector<float> yVelPrev = m_yVelPrev;
-    std::vector<float> xVel = m_xVel;
-    std::vector<float> yVel = m_yVel;
+    std::vector<float>& xVelPrev = m_xVelPrev;
+    std::vector<float>& yVelPrev = m_yVelPrev;
+    std::vector<float>& xVel = m_xVel;
+    std::vector<float>& yVel = m_yVel;
     
     Diffuse(1, xVelPrev, xVel, viscosity, timeStep, 4, gridDimensions);
     Diffuse(2, yVelPrev, yVel, viscosity, timeStep, 4, gridDimensions);
@@ -222,7 +222,7 @@ void Fluid::Render(SDL_Renderer* _renderer)
             int xGridPos = x * m_cellSize;
             int yGridPos = y * m_cellSize;
             int density = m_density[GetGridIndex(x, y)];
-            
+                
             // Draw cell
             SDL_Rect cell = {xGridPos, yGridPos, m_cellSize, m_cellSize};
             SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_ADD);
