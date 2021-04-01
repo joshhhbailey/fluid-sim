@@ -15,8 +15,12 @@ class Fluid
         void Advect(int _b, std::vector<float>& _d, std::vector<float>& _d0,  std::vector<float>& _xVel, std::vector<float>& _yVel, float _timeStep, int _gridDimensions);
         void SetBounds(int _b, std::vector<float>& _x, int _gridDimensions);
 
+        void Fade(float _fadeRate);
+        void ShowGrid(SDL_Renderer* _renderer);
+
         void Update();
-        void Render(SDL_Renderer* _renderer);
+        void Draw(SDL_Renderer* _renderer);
+        void Reset();
 
         int GetGridIndex(int _xPos, int _yPos);
 

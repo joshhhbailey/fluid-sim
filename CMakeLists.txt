@@ -32,9 +32,11 @@ target_sources(${TargetName} PRIVATE
     ${PROJECT_SOURCE_DIR}/src/main.cpp
     ${PROJECT_SOURCE_DIR}/src/SDLScene.cpp
     ${PROJECT_SOURCE_DIR}/src/Fluid.cpp
+    ${PROJECT_SOURCE_DIR}/src/KeyboardManager.cpp
     # .h
     ${PROJECT_SOURCE_DIR}/include/SDLScene.h
     ${PROJECT_SOURCE_DIR}/include/Fluid.h
+    ${PROJECT_SOURCE_DIR}/include/KeyboardManager.h
     # ...
 )
 

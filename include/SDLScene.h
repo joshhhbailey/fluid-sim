@@ -1,27 +1,40 @@
 #include <SDL2/SDL.h>
 
+#include "KeyboardManager.h"
+
 class SDLScene
 {
     public:
         SDLScene();
+
         bool Initialise();
         void GameLoop();
         void Close();
 
+        void UpdateMousePosition();
+        void CalculateVelocity();
+
     private:
-        // The window we'll be rendering to
         SDL_Window* window = NULL;
-
-        //The window renderer
         SDL_Renderer* renderer = NULL;
+        KeyboardManager keyboard;
 
-        // Screen dimension constants
         const int SCREEN_SIZE = 256;
+        const int fluidCellSize = 4;
 
         // Mouse position
         int prevMouseX;
         int prevMouseY;
         int mouseX;
         int mouseY;
+        float xVel;
+        float yVel;
+
+        // Mouse buttons
         bool LMBdown = false;
+        bool MMBdown = false;
+        bool RMBdown = false;
+
+        // Debug
+        bool showGrid = false;
 };

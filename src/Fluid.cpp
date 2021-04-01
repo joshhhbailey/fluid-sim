@@ -10,20 +10,14 @@ Fluid::Fluid(int _cellSize, int _gridDimensions, float _timeStep, float _diffusi
     m_diffusion = _diffusion;
     m_viscosity = _viscosity;
 
-    // Initialise grid cells
-    m_prevDensity = std::vector<float>(_gridDimensions * _gridDimensions, 0);
-    m_density = std::vector<float>(_gridDimensions * _gridDimensions, 0);
-    m_xVelPrev = std::vector<float>(_gridDimensions * _gridDimensions, 0);
-    m_yVelPrev = std::vector<float>(_gridDimensions * _gridDimensions, 0);
-    m_xVel = std::vector<float>(_gridDimensions * _gridDimensions, 0);
-    m_yVel = std::vector<float>(_gridDimensions * _gridDimensions, 0);
+    Reset();
 }
 
 void Fluid::AddDensity(int _xPos, int _yPos, float _amount)
 {
     m_density[GetGridIndex(_xPos, _yPos)] += _amount;
 
-    // Cap density to avoid overflow
+    // Constrain density to avoid overflow of RGBA values
     if (m_density[GetGridIndex(_xPos, _yPos)] > 255)
     {
         m_density[GetGridIndex(_xPos, _yPos)] = 255;
@@ -39,25 +33,26 @@ void Fluid::AddVelocity(int _xPos, int _yPos, float _amountX, float _amountY)
 void Fluid::Diffuse(int _b, std::vector<float>& _x, std::vector<float>& _xPrev, float _amount, float _timestep, int _iterations, int _gridDimensions)
 {
     float a = _timestep * _amount * (_gridDimensions - 2) * (_gridDimensions - 2);
-    LinearSolve(_b, _x, _xPrev, a, 1 + 6 * a, _iterations, _gridDimensions);
+    LinearSolve(_b, _x, _xPrev, a, 1 + 4 * a, _iterations, _gridDimensions);
 }
 
 void Fluid::LinearSolve(int _b, std::vector<float>& _x, std::vector<float>& _xPrev, float _a, float _c, int _iterations, int _gridDimensions)
 {
-    float cRecip = 1.0f / _c;
+    // More iterations = more accuracy
     for (int k = 0; k < _iterations; ++k)
     {
+        // Loop all cells (excluding boundaries)
         for (int j = 1; j < _gridDimensions - 1; ++j)
         {
             for (int i = 1; i < _gridDimensions - 1; ++i)
             {
-                // Cell is a product of itself and its surrounding neighbours
+                // Each cells diffusion amount is a product of itself and its direct surrounding neighbours using Gauss-Seidel relaxtion
                 _x[GetGridIndex(i, j)] = (_xPrev[GetGridIndex(i, j)] + _a *
                                              (_x[GetGridIndex(i + 1, j)] +      // Right
                                               _x[GetGridIndex(i - 1, j)] +      // Left
                                               _x[GetGridIndex(i, j + 1)] +      // Down
                                               _x[GetGridIndex(i, j - 1 )]))     // Up
-                                              * cRecip;
+                                              / _c;
                 }
             }
         SetBounds(_b, _x, _gridDimensions);
@@ -66,6 +61,7 @@ void Fluid::LinearSolve(int _b, std::vector<float>& _x, std::vector<float>& _xPr
 
 void Fluid::Project(std::vector<float>& _xVel, std::vector<float>& _yVel, std::vector<float>& _p, std::vector<float>& _div, int _iterations, int _gridDimensions)
 {
+    // Hodge decomposition (incompressible field = current velocities - gradient field)
     for (int j = 1; j < _gridDimensions - 1; ++j)
     {
         for (int i = 1; i < _gridDimensions - 1; ++i)
@@ -87,8 +83,10 @@ void Fluid::Project(std::vector<float>& _xVel, std::vector<float>& _yVel, std::v
     {
         for (int i = 1; i < _gridDimensions - 1; ++i)
         {
+            // Product of left and right neighbour
             _xVel[GetGridIndex(i, j)] -= 0.5f * (_p[GetGridIndex(i + 1, j)] -
                                                  _p[GetGridIndex(i - 1, j)]) * _gridDimensions;
+            // Product of top and bottom neighbour
             _yVel[GetGridIndex(i, j)] -= 0.5f * (_p[GetGridIndex(i, j + 1)] -
                                                  _p[GetGridIndex(i, j - 1)]) * _gridDimensions;
         }
@@ -99,65 +97,57 @@ void Fluid::Project(std::vector<float>& _xVel, std::vector<float>& _yVel, std::v
 
 void Fluid::Advect(int _b, std::vector<float>& _d, std::vector<float>& _d0,  std::vector<float>& _xVel, std::vector<float>& _yVel, float _timeStep, int _gridDimensions)
 {
-    float i0, i1, j0, j1;
+    // Linear backtracing
+    // X
+    float x, s0, s1;
+    int i0, i1;
+
+    // Y
+    float y, t0, t1;
+    int j0, j1;
+
+    float timeStep = _timeStep * (_gridDimensions - 2);
     
-    float dtx = _timeStep * (_gridDimensions - 2);
-    float dty = _timeStep * (_gridDimensions - 2);
-    
-    float s0, s1, t0, t1;
-    float tmp1, tmp2, x, y;
-    
-    float Nfloat = float(_gridDimensions);
-    float ifloat, jfloat;
-    int i, j;
-    
-    for (j = 1, jfloat = 1; j < _gridDimensions - 1; ++j, ++jfloat)
+    // Loop all cells (excluding boundaries)
+    for (int j = 1; j < _gridDimensions - 1; ++j)
     { 
-        for (i = 1, ifloat = 1; i < _gridDimensions - 1; ++i, ++ifloat)
+        for (int i = 1; i < _gridDimensions - 1; ++i)
         {
-            tmp1 = dtx * _xVel[GetGridIndex(i, j)];
-            tmp2 = dty * _yVel[GetGridIndex(i, j)];
-            x = ifloat - tmp1;
-            y = jfloat - tmp2;
-                
+            // X
+            x = i - (timeStep * _xVel[GetGridIndex(i, j)]);
             if (x < 0.5f)
             {
                 x = 0.5f;
             }
-
-            if (x > Nfloat + 0.5f)
+            if (x > _gridDimensions + 0.5f)
             {
-                x = Nfloat + 0.5f;
+                x = _gridDimensions + 0.5f;
             }
 
-            i0 = floorf(x);
-            i1 = i0 + 1.0f;
+            i0 = int(x);
+            i1 = i0 + 1;
+            s1 = x - i0;
+            s0 = 1.0f - s1;
 
+            // Y
+            y = j - (timeStep * _yVel[GetGridIndex(i, j)]);
             if (y < 0.5f)
             {
                 y = 0.5f;
             }
-
-            if (y > Nfloat + 0.5f)
+            if (y > _gridDimensions + 0.5f)
             {
-                y = Nfloat + 0.5f;
+                y = _gridDimensions + 0.5f;
             }
 
-            j0 = floorf(y);
-            j1 = j0 + 1.0f; 
-                
-            s1 = x - i0; 
-            s0 = 1.0f - s1; 
-            t1 = y - j0; 
+            j0 = int(y);
+            j1 = j0 + 1;
+            t1 = y - j0;
             t0 = 1.0f - t1;
                 
-            int i0i = int(i0);
-            int i1i = int(i1);
-            int j0i = int(j0);
-            int j1i = int(j1);
-                
-            _d[GetGridIndex(i, j)] = s0 * (t0 * _d0[GetGridIndex(i0i, j0i)] + t1 * _d0[GetGridIndex(i0i, j1i)]) +
-                                     s1 * (t0 * _d0[GetGridIndex(i1i, j0i)] + t1 * _d0[GetGridIndex(i1i, j1i)]);   
+            // Cell is a product of itself and its surrounding neighbours
+            _d[GetGridIndex(i, j)] = s0 * (t0 * _d0[GetGridIndex(i0, j0)] + t1 * _d0[GetGridIndex(i0, j1)]) +
+                                     s1 * (t0 * _d0[GetGridIndex(i1, j0)] + t1 * _d0[GetGridIndex(i1, j1)]);   
         }
     }
     SetBounds(_b, _d, _gridDimensions);
@@ -165,55 +155,74 @@ void Fluid::Advect(int _b, std::vector<float>& _d, std::vector<float>& _d0,  std
 
 void Fluid::SetBounds(int _b, std::vector<float>& _x, int _gridDimensions)
 {
+    // Sets the velocity of the boundary cells, equal to the reverse incoming velocity (repelling the fluid)
+
+    // Top and bottom cases
     for (int i = 1; i < _gridDimensions - 1; ++i)
     {
-        _x[GetGridIndex(i, 0)] = _b == 2 ? -_x[GetGridIndex(i, 1)] : _x[GetGridIndex(i, 1)];          // Top
-        _x[GetGridIndex(i, _gridDimensions - 1)] = _b == 2 ? -_x[GetGridIndex(i, _gridDimensions - 2)] : _x[GetGridIndex(i, _gridDimensions - 2)];    // Bottom
+        _x[GetGridIndex(i, 0)] = _b == 2 ? -_x[GetGridIndex(i, 1)] : _x[GetGridIndex(i, 1)];
+        _x[GetGridIndex(i, _gridDimensions - 1)] = _b == 2 ? -_x[GetGridIndex(i, _gridDimensions - 2)] : _x[GetGridIndex(i, _gridDimensions - 2)];
     }
+    // Left and right cases
     for (int j = 1; j < _gridDimensions - 1; ++j)
     {
-        _x[GetGridIndex(0, j)] = _b == 1 ? -_x[GetGridIndex(1, j)] : _x[GetGridIndex(1, j)];    // Left
-        _x[GetGridIndex(_gridDimensions - 1, j)] = _b == 1 ? -_x[GetGridIndex(_gridDimensions - 2, j)] : _x[GetGridIndex(_gridDimensions - 2, j)];    // Right
+        _x[GetGridIndex(0, j)] = _b == 1 ? -_x[GetGridIndex(1, j)] : _x[GetGridIndex(1, j)];
+        _x[GetGridIndex(_gridDimensions - 1, j)] = _b == 1 ? -_x[GetGridIndex(_gridDimensions - 2, j)] : _x[GetGridIndex(_gridDimensions - 2, j)];
     }
     
-    _x[GetGridIndex(0, 0)] = 0.5f * (_x[GetGridIndex(1, 0)] + _x[GetGridIndex(0, 1)]);               // Top left
-    _x[GetGridIndex(0, _gridDimensions - 1)] = 0.5f * (_x[GetGridIndex(1, _gridDimensions - 1)] + _x[GetGridIndex(0, _gridDimensions - 2)]);         // Top right
-    _x[GetGridIndex(_gridDimensions - 1, 0)] = 0.5f * (_x[GetGridIndex(_gridDimensions - 2, 0)] + _x[GetGridIndex(_gridDimensions - 1, 1)]);         // Bottom left
-    _x[GetGridIndex(_gridDimensions - 1, _gridDimensions - 1)] = 0.5f * (_x[GetGridIndex(_gridDimensions - 2, _gridDimensions - 1)] + _x[GetGridIndex(_gridDimensions - 1, _gridDimensions - 2)]);   // Bottom right
+    // Corner cases (TL, TR, BL, BR)
+    _x[GetGridIndex(0, 0)] = 0.5f * (_x[GetGridIndex(1, 0)] + _x[GetGridIndex(0, 1)]);
+    _x[GetGridIndex(0, _gridDimensions - 1)] = 0.5f * (_x[GetGridIndex(1, _gridDimensions - 1)] + _x[GetGridIndex(0, _gridDimensions - 2)]);
+    _x[GetGridIndex(_gridDimensions - 1, 0)] = 0.5f * (_x[GetGridIndex(_gridDimensions - 2, 0)] + _x[GetGridIndex(_gridDimensions - 1, 1)]);
+    _x[GetGridIndex(_gridDimensions - 1, _gridDimensions - 1)] = 0.5f * (_x[GetGridIndex(_gridDimensions - 2, _gridDimensions - 1)] + _x[GetGridIndex(_gridDimensions - 1, _gridDimensions - 2)]);
+}
+
+void Fluid::Fade(float _fadeRate)
+{
+    for (int i = 0; i < m_density.size(); ++i)
+    {
+        m_density[i] -= _fadeRate;
+        // Constrain density to avoid overflow of RGBA values
+        if (m_density[i] < 0)
+        {
+            m_density[i] = 0;
+        }
+        else if (m_density[i] > 255)
+        {
+            m_density[i] = 255;
+        }
+    }
+}
+
+void Fluid::ShowGrid(SDL_Renderer* _renderer)
+{
+    // Set line colour (red)
+    SDL_SetRenderDrawColor(_renderer, 0xFF, 0x00, 0x00, 0xFF);
+    for (int x = 0; x < m_gridDimensions; x += m_cellSize)
+    {
+        // Horizontal
+        SDL_RenderDrawLine(_renderer, x * m_cellSize, 0, x * m_cellSize, m_gridDimensions * m_cellSize);
+        // Vertical
+        SDL_RenderDrawLine(_renderer, 0, x * m_cellSize, m_gridDimensions * m_cellSize, x * m_cellSize);
+    }
 }
 
 void Fluid::Update()
 {
-    float& timeStep = m_timeStep;
-    int& gridDimensions = m_gridDimensions;
-    float& diffusion = m_diffusion;
-    float& viscosity = m_viscosity;
-
-    // Density
-    std::vector<float>& prevDensity = m_prevDensity;
-    std::vector<float>& density = m_density;
-
-    // Velocity
-    std::vector<float>& xVelPrev = m_xVelPrev;
-    std::vector<float>& yVelPrev = m_yVelPrev;
-    std::vector<float>& xVel = m_xVel;
-    std::vector<float>& yVel = m_yVel;
+    // Update velocity
+    Diffuse(1, m_xVelPrev, m_xVel, m_viscosity, m_timeStep, 4, m_gridDimensions);           // Diffuse velocity
+    Diffuse(2, m_yVelPrev, m_yVel, m_viscosity, m_timeStep, 4, m_gridDimensions);           // ...
+    Project(m_xVelPrev, m_yVelPrev, m_xVel, m_yVel, 4, m_gridDimensions);                   // Make incompressible
+    Advect(1, m_xVel, m_xVelPrev, m_xVelPrev, m_yVelPrev, m_timeStep, m_gridDimensions);    // Trace back original position
+    Advect(2, m_yVel, m_yVelPrev, m_xVelPrev, m_yVelPrev, m_timeStep, m_gridDimensions);    // ...
+    Project(m_xVel, m_yVel, m_xVelPrev, m_yVelPrev, 4, m_gridDimensions);                   // Make incompressible
     
-    Diffuse(1, xVelPrev, xVel, viscosity, timeStep, 4, gridDimensions);
-    Diffuse(2, yVelPrev, yVel, viscosity, timeStep, 4, gridDimensions);
-    
-    Project(xVelPrev, yVelPrev, xVel, yVel, 4, gridDimensions);
-    
-    Advect(1, xVel, xVelPrev, xVelPrev, yVelPrev, timeStep, gridDimensions);
-    Advect(2, yVel, yVelPrev, xVelPrev, yVelPrev, timeStep, gridDimensions);
-    
-    Project(xVel, yVel, xVelPrev, yVelPrev, 4, gridDimensions);
-    
-    Diffuse(0, prevDensity, density, diffusion, timeStep, 4, gridDimensions);
-    Advect(0, density, prevDensity, xVel, yVel, timeStep, gridDimensions);
+    // Update density
+    Diffuse(0, m_prevDensity, m_density, m_diffusion, m_timeStep, 4, m_gridDimensions);     // Diffuse density
+    Advect(0, m_density, m_prevDensity, m_xVel, m_yVel, m_timeStep, m_gridDimensions);      // Trace back original position
 }
 
-void Fluid::Render(SDL_Renderer* _renderer)
+void Fluid::Draw(SDL_Renderer* _renderer)
 {
     for (int y = 0; y < m_gridDimensions; ++y)
     {
@@ -221,19 +230,31 @@ void Fluid::Render(SDL_Renderer* _renderer)
         {
             int xGridPos = x * m_cellSize;
             int yGridPos = y * m_cellSize;
-            int density = m_density[GetGridIndex(x, y)];
+            float density = m_density[GetGridIndex(x, y)];
                 
             // Draw cell
             SDL_Rect cell = {xGridPos, yGridPos, m_cellSize, m_cellSize};
             SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_ADD);
-			SDL_SetRenderDrawColor(_renderer, 0xFF, 0xFF, 0xFF, density);	
+			SDL_SetRenderDrawColor(_renderer, 0xFF, 0xFF, 0xFF, Uint8(density));
 			SDL_RenderFillRect(_renderer, &cell);
         }
     }
 }
 
+void Fluid::Reset()
+{
+    // Reset all fluids values back to 0
+    m_prevDensity = std::vector<float>(m_gridDimensions * m_gridDimensions, 0);
+    m_density = std::vector<float>(m_gridDimensions * m_gridDimensions, 0);
+    m_xVelPrev = std::vector<float>(m_gridDimensions * m_gridDimensions, 0);
+    m_yVelPrev = std::vector<float>(m_gridDimensions * m_gridDimensions, 0);
+    m_xVel = std::vector<float>(m_gridDimensions * m_gridDimensions, 0);
+    m_yVel = std::vector<float>(m_gridDimensions * m_gridDimensions, 0);
+}
+
 int Fluid::GetGridIndex(int _xPos, int _yPos)
 {
+    // Strange vector out of bounds happening...
     // Constrain index (std::clamp is horrendously slow)
     if (_xPos > m_gridDimensions - 1)
     {

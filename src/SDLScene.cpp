@@ -1,8 +1,7 @@
 #include "SDLScene.h"
+#include "Fluid.h"
 
 #include <iostream>
-
-#include "Fluid.h"
 
 SDLScene::SDLScene()
 {
@@ -56,7 +55,7 @@ void SDLScene::GameLoop()
 	SDL_Event e;
 
     // Create fluid
-    Fluid fluid(4, SCREEN_SIZE / 4, 0.1f, 0, 0);
+    Fluid fluid(fluidCellSize, SCREEN_SIZE / fluidCellSize, 0.1f, 0, 0);
 
 	// While application is running
 	while (!quit)
@@ -74,6 +73,14 @@ void SDLScene::GameLoop()
                 {
                     LMBdown = true;
                 }
+                if (e.button.button == SDL_BUTTON_MIDDLE)
+                {
+                    MMBdown = true;
+                }
+                if (e.button.button == SDL_BUTTON_RIGHT)
+                {
+                    RMBdown = true;
+                }
             }
             if (e.type == SDL_MOUSEBUTTONUP)
             {
@@ -81,34 +88,71 @@ void SDLScene::GameLoop()
                 {
                     LMBdown = false;
                 }
+                if (e.button.button == SDL_BUTTON_MIDDLE)
+                {
+                    MMBdown = false;
+                }
+                if (e.button.button == SDL_BUTTON_RIGHT)
+                {
+                    RMBdown = false;
+                }
             }
 		}
 
         // Keyboard input
-        const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
-        if (currentKeyStates[SDL_SCANCODE_ESCAPE])
+        keyboard.Update();
+        if (keyboard.GetKeyDown(SDL_SCANCODE_D))
+        {
+            if (!showGrid)
+            {
+                showGrid = true;
+            }
+            else
+            {
+                showGrid = false;
+            }
+        }
+        if (keyboard.GetKeyDown(SDL_SCANCODE_R))
+        {
+            fluid.Reset();
+        }
+        if (keyboard.GetKeyDown(SDL_SCANCODE_ESCAPE))
         {
             quit = true;
         }
 
-        if (LMBdown)
+        // Mouse button input
+        if (MMBdown)
         {
-            prevMouseX = mouseX;
-            prevMouseY = mouseY;
-            SDL_GetMouseState(&mouseX, &mouseY);
-            //std::cout << mouseX << " " << mouseY << std::endl;
-            fluid.AddDensity(mouseX / 4, mouseY / 4, 100);
-            float xVel = float(mouseX - prevMouseX);
-            float yVel = float(mouseY - prevMouseY);
-            fluid.AddVelocity(mouseX / 4, mouseY / 4, xVel, yVel);
+            UpdateMousePosition();
+            fluid.AddDensity(mouseX / fluidCellSize, mouseY / fluidCellSize, 100);
+            CalculateVelocity();
+            fluid.AddVelocity(mouseX / fluidCellSize, mouseY / fluidCellSize, xVel, yVel);
+        }
+        else if (LMBdown)
+        {
+            UpdateMousePosition();
+            fluid.AddDensity(mouseX / fluidCellSize, mouseY / fluidCellSize, 100);
+        }
+        else if (RMBdown)
+        {
+            UpdateMousePosition();
+            CalculateVelocity();
+            fluid.AddVelocity(mouseX / fluidCellSize, mouseY / fluidCellSize, xVel, yVel);
         }
 
         // Clear screen
 		SDL_SetRenderDrawColor(renderer, 0x0, 0x0, 0x0, 0x0);
 		SDL_RenderClear(renderer);
 
+        if (showGrid)
+        {
+            fluid.ShowGrid(renderer);
+        }
+
         fluid.Update();
-        fluid.Render(renderer);
+        fluid.Draw(renderer);
+        fluid.Fade(0.1f);
 
         // Update screen
 		SDL_RenderPresent(renderer);
@@ -128,4 +172,17 @@ void SDLScene::Close()
 
     // Quit SDL subsystems
     SDL_Quit();
+}
+
+void SDLScene::UpdateMousePosition()
+{
+    prevMouseX = mouseX;
+    prevMouseY = mouseY;
+    SDL_GetMouseState(&mouseX, &mouseY);
+}
+
+void SDLScene::CalculateVelocity()
+{
+    xVel = float(mouseX - prevMouseX);
+    yVel = float(mouseY - prevMouseY);
 }
