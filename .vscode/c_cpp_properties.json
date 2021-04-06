@@ -4,7 +4,9 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/Users/baile/vcpkg/packages/sdl2_x64-windows/include/**"
+                "C:/Users/baile/vcpkg/packages/sdl2_x64-windows/include/**",
+                "C:/Users/baile/vcpkg/packages/sdl2-image_x64-windows/include/**",
+                "C:/Users/baile/vcpkg/packages/sdl2-ttf_x64-windows/include/**"
             ],
             "defines": [
                 "_DEBUG",

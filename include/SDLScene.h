@@ -17,10 +17,11 @@ class SDLScene
     private:
         SDL_Window* window = NULL;
         SDL_Renderer* renderer = NULL;
+
         KeyboardManager keyboard;
 
-        const int SCREEN_SIZE = 256;
-        const int fluidCellSize = 4;
+        const int SCREEN_SIZE = 512;
+        const int fluidCellSize = 32;
 
         // Mouse position
         int prevMouseX;
@@ -37,4 +38,5 @@ class SDLScene
 
         // Debug
         bool showGrid = false;
+        bool showVelocity = false;
 };

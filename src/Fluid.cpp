@@ -2,15 +2,19 @@
 
 #include <iostream>
 
-Fluid::Fluid(int _cellSize, int _gridDimensions, float _timeStep, float _diffusion, float _viscosity)
+Fluid::Fluid(int _cellSize, int _gridDimensions, float _timeStep, float _diffusion, float _viscosity, SDL_Renderer* _renderer)
 {
     m_cellSize = _cellSize;
     m_gridDimensions = _gridDimensions;
     m_timeStep = _timeStep;
     m_diffusion = _diffusion;
     m_viscosity = _viscosity;
-
     Reset();
+
+    m_renderer = _renderer;
+
+    // Load arrow
+    m_arrow.Load("../../images/velArrow.png", m_renderer);
 }
 
 void Fluid::AddDensity(int _xPos, int _yPos, float _amount)
@@ -18,9 +22,9 @@ void Fluid::AddDensity(int _xPos, int _yPos, float _amount)
     m_density[GetGridIndex(_xPos, _yPos)] += _amount;
 
     // Constrain density to avoid overflow of RGBA values
-    if (m_density[GetGridIndex(_xPos, _yPos)] > 255)
+    if (m_density[GetGridIndex(_xPos, _yPos)] > 255.0f)
     {
-        m_density[GetGridIndex(_xPos, _yPos)] = 255;
+        m_density[GetGridIndex(_xPos, _yPos)] = 255.0f;
     }
 }
 
@@ -194,17 +198,52 @@ void Fluid::Fade(float _fadeRate)
     }
 }
 
-void Fluid::ShowGrid(SDL_Renderer* _renderer)
+void Fluid::ShowGrid()
 {
     // Set line colour (red)
-    SDL_SetRenderDrawColor(_renderer, 0xFF, 0x00, 0x00, 0xFF);
-    for (int x = 0; x < m_gridDimensions; x += m_cellSize)
+    SDL_SetRenderDrawColor(m_renderer, 0xFF, 0x00, 0x00, 0xFF);
+    for (int x = 1; x < m_gridDimensions; ++x)
     {
         // Horizontal
-        SDL_RenderDrawLine(_renderer, x * m_cellSize, 0, x * m_cellSize, m_gridDimensions * m_cellSize);
+        SDL_RenderDrawLine(m_renderer, x * m_cellSize, 0, x * m_cellSize, m_gridDimensions * m_cellSize);
         // Vertical
-        SDL_RenderDrawLine(_renderer, 0, x * m_cellSize, m_gridDimensions * m_cellSize, x * m_cellSize);
+        SDL_RenderDrawLine(m_renderer, 0, x * m_cellSize, m_gridDimensions * m_cellSize, x * m_cellSize);
     }
+}
+
+void Fluid::ShowVelocity()
+{
+    for (int y = 0; y < m_gridDimensions; ++y)
+    {
+        for (int x = 0; x < m_gridDimensions; ++x)
+        {
+            float xPos = x * m_cellSize;
+            float yPos = y * m_cellSize;
+            float a = xPos - (xPos + m_xVel[GetGridIndex(x, y)]);
+            float o = yPos - (yPos + m_yVel[GetGridIndex(x, y)]);
+            float angle = 0;
+
+            if (o != 0.0f && a != 0.0f)
+            {
+                angle = atan(o / a) * 180 / 3.141f;
+                // 90 >= angle <= 180
+                if (xPos - (xPos + m_xVel[GetGridIndex(x, y)]) > 0.0f && yPos - (yPos + m_yVel[GetGridIndex(x, y)]) < 0.0f)
+                {
+                    angle = abs(angle) + 90.0f;
+                }
+                // 180 >= angle <= 270
+                else if (xPos - (xPos + m_xVel[GetGridIndex(x, y)]) < 0.0f && yPos - (yPos + m_yVel[GetGridIndex(x, y)]) < 0.0f)
+                {
+                    angle = 180.0f + angle;
+                }
+            }
+            m_arrow.Draw(xPos, yPos, NULL, angle, m_renderer);
+        }
+    }
+
+    // Render texture at angle between points
+    // Tan 0 = O / A
+    // 0 = atan(O / A)
 }
 
 void Fluid::Update()
@@ -222,7 +261,7 @@ void Fluid::Update()
     Advect(0, m_density, m_prevDensity, m_xVel, m_yVel, m_timeStep, m_gridDimensions);      // Trace back original position
 }
 
-void Fluid::Draw(SDL_Renderer* _renderer)
+void Fluid::Draw()
 {
     for (int y = 0; y < m_gridDimensions; ++y)
     {
@@ -234,9 +273,9 @@ void Fluid::Draw(SDL_Renderer* _renderer)
                 
             // Draw cell
             SDL_Rect cell = {xGridPos, yGridPos, m_cellSize, m_cellSize};
-            SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_ADD);
-			SDL_SetRenderDrawColor(_renderer, 0xFF, 0xFF, 0xFF, Uint8(density));
-			SDL_RenderFillRect(_renderer, &cell);
+            SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_ADD);
+			SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, Uint8(density));
+			SDL_RenderFillRect(m_renderer, &cell);
         }
     }
 }
@@ -250,6 +289,12 @@ void Fluid::Reset()
     m_yVelPrev = std::vector<float>(m_gridDimensions * m_gridDimensions, 0);
     m_xVel = std::vector<float>(m_gridDimensions * m_gridDimensions, 0);
     m_yVel = std::vector<float>(m_gridDimensions * m_gridDimensions, 0);
+}
+
+void Fluid::Destroy()
+{
+    // Free loaded image
+    m_arrow.Free();
 }
 
 int Fluid::GetGridIndex(int _xPos, int _yPos)
