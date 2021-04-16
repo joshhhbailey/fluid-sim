@@ -2,10 +2,10 @@
 
 #include <iostream>
 
-Fluid::Fluid(int _cellSize, int _gridDimensions, float _timeStep, float _diffusion, float _viscosity, SDL_Renderer* _renderer)
+Fluid::Fluid(int _screenDimensions, float _timeStep, float _diffusion, float _viscosity, SDL_Renderer* _renderer)
 {
-    m_cellSize = _cellSize;
-    m_gridDimensions = _gridDimensions;
+    m_screenDimensions = _screenDimensions;
+    m_gridDimensions = m_screenDimensions / m_cellSize;
     m_timeStep = _timeStep;
     m_diffusion = _diffusion;
     m_viscosity = _viscosity;
@@ -19,6 +19,9 @@ Fluid::Fluid(int _cellSize, int _gridDimensions, float _timeStep, float _diffusi
 
 void Fluid::AddDensity(int _xPos, int _yPos, float _amount)
 {
+    _xPos /= m_cellSize;
+    _yPos /= m_cellSize;
+
     m_density[GetGridIndex(_xPos, _yPos)] += _amount;
 
     // Constrain density to avoid overflow of RGBA values
@@ -30,6 +33,9 @@ void Fluid::AddDensity(int _xPos, int _yPos, float _amount)
 
 void Fluid::AddVelocity(int _xPos, int _yPos, float _amountX, float _amountY)
 {
+    _xPos /= m_cellSize;
+    _yPos /= m_cellSize;
+
     m_xVel[GetGridIndex(_xPos, _yPos)] += _amountX;
     m_yVel[GetGridIndex(_xPos, _yPos)] += _amountY;
 }
@@ -217,8 +223,8 @@ void Fluid::ShowVelocity()
     {
         for (int x = 0; x < m_gridDimensions; ++x)
         {
-            float xPos = x * m_cellSize;
-            float yPos = y * m_cellSize;
+            int xPos = x * m_cellSize;
+            int yPos = y * m_cellSize;
             float a = xPos - (xPos + m_xVel[GetGridIndex(x, y)]);
             float o = yPos - (yPos + m_yVel[GetGridIndex(x, y)]);
             float angle = 0;
@@ -240,10 +246,6 @@ void Fluid::ShowVelocity()
             m_arrow.Draw(xPos, yPos, NULL, angle, m_renderer);
         }
     }
-
-    // Render texture at angle between points
-    // Tan 0 = O / A
-    // 0 = atan(O / A)
 }
 
 void Fluid::Update()
@@ -277,6 +279,26 @@ void Fluid::Draw()
 			SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, Uint8(density));
 			SDL_RenderFillRect(m_renderer, &cell);
         }
+    }
+}
+
+void Fluid::ChangeResolution(bool _scale)
+{
+    // Increase resolution
+    if (_scale && m_scaleFactor > 2)
+    {
+        m_scaleFactor--;
+        m_cellSize /= 2;
+        m_gridDimensions *= 2;
+        Reset();
+    }
+    // Decrease resolution
+    else if (!_scale && m_scaleFactor < 5)
+    {
+        m_scaleFactor++;
+        m_cellSize *= 2;
+        m_gridDimensions /= 2;
+        Reset();
     }
 }
 

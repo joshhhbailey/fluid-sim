@@ -15,28 +15,27 @@ class SDLScene
         void CalculateVelocity();
 
     private:
-        SDL_Window* window = NULL;
-        SDL_Renderer* renderer = NULL;
+        SDL_Window* m_window = NULL;
+        SDL_Renderer* m_renderer = NULL;
 
-        KeyboardManager keyboard;
+        KeyboardManager m_keyboard;
 
-        const int SCREEN_SIZE = 512;
-        const int fluidCellSize = 32;
+        const int m_SCREEN_SIZE = 512;
 
         // Mouse position
-        int prevMouseX;
-        int prevMouseY;
-        int mouseX;
-        int mouseY;
-        float xVel;
-        float yVel;
+        int m_prevMouseX;
+        int m_prevMouseY;
+        int m_mouseX;
+        int m_mouseY;
+        float m_xVel;
+        float m_yVel;
 
         // Mouse buttons
-        bool LMBdown = false;
-        bool MMBdown = false;
-        bool RMBdown = false;
+        bool m_LMBdown = false;
+        bool m_MMBdown = false;
+        bool m_RMBdown = false;
 
         // Debug
-        bool showGrid = false;
-        bool showVelocity = false;
+        bool m_showGrid = false;
+        bool m_showVelocity = false;
 };

@@ -7,7 +7,7 @@
 class Fluid
 {
     public:
-        Fluid(int _cellSize, int _gridDimensions, float _timeStep, float _diffusion, float _viscosity, SDL_Renderer* _renderer);
+        Fluid(int _screenDimensions, float _timeStep, float _diffusion, float _viscosity, SDL_Renderer* _renderer);
 
         void AddDensity(int _xPos, int _yPos, float _amount);
         void AddVelocity(int _xPos, int _yPos, float _amountX, float _amountY);
@@ -29,13 +29,16 @@ class Fluid
 
         void Update();
         void Draw();
+        void ChangeResolution(bool _scale);
         void Reset();
         void Destroy();
 
         int GetGridIndex(int _xPos, int _yPos);
 
     private:
-        int m_cellSize;
+        int m_screenDimensions;
+        int m_cellSize = 32;
+        int m_scaleFactor = 5;
         int m_gridDimensions;
         float m_timeStep;
         float m_diffusion;

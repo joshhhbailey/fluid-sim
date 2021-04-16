@@ -21,8 +21,8 @@ bool SDLScene::Initialise()
     else
     {
         // Create window
-        window = SDL_CreateWindow("Grid Based Fluid Sim", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_SIZE, SCREEN_SIZE, SDL_WINDOW_SHOWN);
-        if (window == NULL)
+        m_window = SDL_CreateWindow("Grid Based Fluid Sim", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_SCREEN_SIZE, m_SCREEN_SIZE, SDL_WINDOW_SHOWN);
+        if (m_window == NULL)
         {
             std::cout << "Window could not be created! SDL_Error: " << SDL_GetError() << "\n";
             success = false;
@@ -30,8 +30,8 @@ bool SDLScene::Initialise()
         else
         {
             // Create renderer for window
-			renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-			if (renderer == NULL)
+			m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
+			if (m_renderer == NULL)
 			{
 				std::cout << "Renderer could not be created! SDL Error: " << SDL_GetError() << "\n";
 				success = false;
@@ -39,7 +39,7 @@ bool SDLScene::Initialise()
             else
             {
                 // Initialize renderer color
-				SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+				SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 
                 // Initialize PNG loading
 				int imgFlags = IMG_INIT_PNG;
@@ -59,13 +59,13 @@ void SDLScene::GameLoop()
     bool quit = false;
 
     // Initialise mouse position
-    SDL_GetMouseState(&mouseX, &mouseY);
+    SDL_GetMouseState(&m_mouseX, &m_mouseY);
 
     // Event handler
 	SDL_Event e;
 
     // Create fluid
-    Fluid fluid(fluidCellSize, SCREEN_SIZE / fluidCellSize, 0.1f, 0, 0, renderer);
+    Fluid fluid(m_SCREEN_SIZE, 0.1f, 0, 0, m_renderer);
 
 	// While application is running
 	while (!quit)
@@ -81,96 +81,104 @@ void SDLScene::GameLoop()
             {
                 if (e.button.button == SDL_BUTTON_LEFT)
                 {
-                    LMBdown = true;
+                    m_LMBdown = true;
                 }
                 if (e.button.button == SDL_BUTTON_MIDDLE)
                 {
-                    MMBdown = true;
+                    m_MMBdown = true;
                 }
                 if (e.button.button == SDL_BUTTON_RIGHT)
                 {
-                    RMBdown = true;
+                    m_RMBdown = true;
                 }
             }
             if (e.type == SDL_MOUSEBUTTONUP)
             {
                 if (e.button.button == SDL_BUTTON_LEFT)
                 {
-                    LMBdown = false;
+                    m_LMBdown = false;
                 }
                 if (e.button.button == SDL_BUTTON_MIDDLE)
                 {
-                    MMBdown = false;
+                    m_MMBdown = false;
                 }
                 if (e.button.button == SDL_BUTTON_RIGHT)
                 {
-                    RMBdown = false;
+                    m_RMBdown = false;
                 }
             }
 		}
 
         // Keyboard input
-        keyboard.Update();
-        if (keyboard.GetKeyDown(SDL_SCANCODE_G))
+        m_keyboard.Update();
+        if (m_keyboard.GetKeyDown(SDL_SCANCODE_G))
         {
-            if (!showGrid)
+            if (!m_showGrid)
             {
-                showGrid = true;
+                m_showGrid = true;
             }
             else
             {
-                showGrid = false;
+                m_showGrid = false;
             }
         }
-        if (keyboard.GetKeyDown(SDL_SCANCODE_V))
+        if (m_keyboard.GetKeyDown(SDL_SCANCODE_V))
         {
-            if (!showVelocity)
+            if (!m_showVelocity)
             {
-                showVelocity = true;
+                m_showVelocity = true;
             }
             else
             {
-                showVelocity = false;
+                m_showVelocity = false;
             }
         }
-        if (keyboard.GetKeyDown(SDL_SCANCODE_R))
+        if (m_keyboard.GetKeyDown(SDL_SCANCODE_UP))
+        {
+            fluid.ChangeResolution(true);
+        }
+        if (m_keyboard.GetKeyDown(SDL_SCANCODE_DOWN))
+        {
+            fluid.ChangeResolution(false);
+        }
+        if (m_keyboard.GetKeyDown(SDL_SCANCODE_R))
         {
             fluid.Reset();
         }
-        if (keyboard.GetKeyDown(SDL_SCANCODE_ESCAPE))
+        if (m_keyboard.GetKeyDown(SDL_SCANCODE_ESCAPE))
         {
             quit = true;
         }
 
         // Mouse button input
-        if (MMBdown)
+        if (m_MMBdown)
         {
             UpdateMousePosition();
-            fluid.AddDensity(mouseX / fluidCellSize, mouseY / fluidCellSize, 255);
+            fluid.AddDensity(m_mouseX, m_mouseY, 255);
             CalculateVelocity();
-            fluid.AddVelocity(mouseX / fluidCellSize, mouseY / fluidCellSize, xVel, yVel);
+            fluid.AddVelocity(m_mouseX, m_mouseY, m_xVel, m_yVel);
         }
-        else if (LMBdown)
+        else if (m_LMBdown)
         {
             UpdateMousePosition();
-            fluid.AddDensity(mouseX / fluidCellSize, mouseY / fluidCellSize, 255);
+            fluid.AddDensity(m_mouseX, m_mouseY, 255);
         }
-        else if (RMBdown)
+        else if (m_RMBdown)
         {
             UpdateMousePosition();
             CalculateVelocity();
-            fluid.AddVelocity(mouseX / fluidCellSize, mouseY / fluidCellSize, xVel, yVel);
+            fluid.AddVelocity(m_mouseX, m_mouseY, m_xVel, m_yVel);
         }
 
         // Clear screen
-		SDL_SetRenderDrawColor(renderer, 0x0, 0x0, 0x0, 0x0);
-		SDL_RenderClear(renderer);
+		SDL_SetRenderDrawColor(m_renderer, 0x0, 0x0, 0x0, 0x0);
+		SDL_RenderClear(m_renderer);
 
-        if (showGrid)
+        if (m_showGrid)
         {
             fluid.ShowGrid();
         }
-        if (showVelocity)
+        if (m_showVelocity)
         {
             fluid.ShowVelocity();
         }
@@ -180,7 +188,7 @@ void SDLScene::GameLoop()
         fluid.Fade(0.01f);
 
         // Update screen
-		SDL_RenderPresent(renderer);
+		SDL_RenderPresent(m_renderer);
 	}
     fluid.Destroy();
     Close();
@@ -189,12 +197,12 @@ void SDLScene::GameLoop()
 void SDLScene::Close()
 {
     // Destroy renderer
-    SDL_DestroyRenderer(renderer);
-    renderer = NULL;
+    SDL_DestroyRenderer(m_renderer);
+    m_renderer = NULL;
 
     // Destroy window
-    SDL_DestroyWindow(window);
-    window = NULL;
+    SDL_DestroyWindow(m_window);
+    m_window = NULL;
 
     // Quit SDL subsystems
     IMG_Quit();
@@ -203,13 +211,13 @@ void SDLScene::Close()
 
 void SDLScene::UpdateMousePosition()
 {
-    prevMouseX = mouseX;
-    prevMouseY = mouseY;
-    SDL_GetMouseState(&mouseX, &mouseY);
+    m_prevMouseX = m_mouseX;
+    m_prevMouseY = m_mouseY;
+    SDL_GetMouseState(&m_mouseX, &m_mouseY);
 }
 
 void SDLScene::CalculateVelocity()
 {
-    xVel = float(mouseX - prevMouseX);
-    yVel = float(mouseY - prevMouseY);
+    m_xVel = float(m_mouseX - m_prevMouseX);
+    m_yVel = float(m_mouseY - m_prevMouseY);
 }
