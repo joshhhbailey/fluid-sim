@@ -65,9 +65,10 @@ void Texture::SetColour(Uint8 _r, Uint8 _g, Uint8 _b)
 	SDL_SetTextureColorMod(m_texture, _r, _g, _b);
 }
 
-void Texture::Draw(int _x, int _y, SDL_Rect* _rect, float _angle, SDL_Renderer* _renderer)
+void Texture::Draw(int _x, int _y, SDL_Rect* _rect, float _angle, int _scale, SDL_Renderer* _renderer)
 {
-	SDL_Rect renderQuad = {_x, _y, m_width, m_height };
+	// Scale texture to grid cell dimensions
+	SDL_Rect renderQuad = {_x, _y, m_width / (int)pow(2, 5 - _scale), m_height / (int)pow(2, 5 - _scale) };
 
 	if (_rect != NULL)
 	{

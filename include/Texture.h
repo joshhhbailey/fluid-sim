@@ -11,7 +11,7 @@ class Texture
         bool Load(std::string path, SDL_Renderer* _renderer);
         void Free();
         void SetColour(Uint8 _r, Uint8 _g, Uint8 _b);
-        void Draw(int _x, int _y, SDL_Rect* _rect, float _angle, SDL_Renderer* _renderer);
+        void Draw(int _x, int _y, SDL_Rect* _rect, float _angle, int _scale, SDL_Renderer* _renderer);
 
         int GetWidth();
         int GetHeight();

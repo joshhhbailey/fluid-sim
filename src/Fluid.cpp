@@ -243,7 +243,7 @@ void Fluid::ShowVelocity()
                     angle = 180.0f + angle;
                 }
             }
-            m_arrow.Draw(xPos, yPos, NULL, angle, m_renderer);
+            m_arrow.Draw(xPos, yPos, NULL, angle, m_scaleFactor, m_renderer);
         }
     }
 }
