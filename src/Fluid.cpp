@@ -231,17 +231,7 @@ void Fluid::ShowVelocity()
 
             if (o != 0.0f && a != 0.0f)
             {
-                angle = atan(o / a) * 180 / 3.141f;
-                // 90 >= angle <= 180
-                if (xPos - (xPos + m_xVel[GetGridIndex(x, y)]) > 0.0f && yPos - (yPos + m_yVel[GetGridIndex(x, y)]) < 0.0f)
-                {
-                    angle = abs(angle) + 90.0f;
-                }
-                // 180 >= angle <= 270
-                else if (xPos - (xPos + m_xVel[GetGridIndex(x, y)]) < 0.0f && yPos - (yPos + m_yVel[GetGridIndex(x, y)]) < 0.0f)
-                {
-                    angle = 180.0f + angle;
-                }
+                angle = atan2(o, a) * 180 / 3.141f;
             }
             m_arrow.Draw(xPos, yPos, NULL, angle, m_scaleFactor, m_renderer);
         }
