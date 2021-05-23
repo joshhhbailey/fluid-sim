@@ -1,3 +1,7 @@
+///
+/// @file Texture.cpp
+/// @brief Handles textures input / drawing (velocity arrows)
+
 #include <SDL_image.h>
 
 #include "Texture.h"

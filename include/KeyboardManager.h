@@ -1,3 +1,14 @@
+/// \brief Manages keyboard inputs from the user
+/// \author Josh Bailey
+/// \version 1.0
+/// \date 23/05/21 Updated to NCCA Coding Standard
+/// Revision History:
+///
+/// \todo
+
+#ifndef KEYBOARD_MANAGER_H_
+#define KEYBOARD_MANAGER_H_
+
 #include <SDL2/SDL.h>
 
 class KeyboardManager
@@ -18,3 +29,5 @@ class KeyboardManager
         Uint8* currentPressed;
         Uint8* previousPressed;
 };
+
+#endif  // _KEYBOARD_MANAGER_H_

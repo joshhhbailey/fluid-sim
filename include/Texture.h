@@ -1,3 +1,14 @@
+/// \brief Handles textures input / drawing (velocity arrows)
+/// \author Josh Bailey
+/// \version 1.0
+/// \date 23/05/21 Updated to NCCA Coding Standard
+/// Revision History:
+///
+/// \todo
+
+#ifndef TEXTURE_H_
+#define TEXTURE_H_
+
 #include <SDL2/SDL.h>
 
 #include <string>
@@ -23,3 +34,5 @@ class Texture
         int m_width = 0;
         int m_height = 0;
 };
+
+#endif // _TEXTURE_H_

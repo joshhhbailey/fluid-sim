@@ -1,3 +1,14 @@
+/// \brief Manages SDL scene and main game loop
+/// \author Josh Bailey
+/// \version 1.0
+/// \date 23/05/21 Updated to NCCA Coding Standard
+/// Revision History:
+///
+/// \todo
+
+#ifndef SDL_SCENE_H_
+#define SDL_SCENE_H_
+
 #include <SDL2/SDL.h>
 
 #include "KeyboardManager.h"
@@ -39,3 +50,5 @@ class SDLScene
         bool m_showGrid = false;
         bool m_showVelocity = false;
 };
+
+#endif // _SDL_SCENE_H_

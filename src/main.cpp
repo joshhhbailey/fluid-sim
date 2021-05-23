@@ -1,3 +1,7 @@
+///
+/// @file main.cpp
+/// @brief Program entry, creats SDL context
+
 #include "SDLScene.h"
 
 #include <iostream>

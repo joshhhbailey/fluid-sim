@@ -1,3 +1,7 @@
+///
+/// @file SDLScene.cpp
+/// @brief Manages SDL scene and main game loop
+
 #include <SDL_image.h>
 
 #include "SDLScene.h"

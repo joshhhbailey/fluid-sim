@@ -1,3 +1,7 @@
+///
+/// @file Fluid.cpp
+/// @brief Updates all fluid parameters
+
 #include "Fluid.h"
 
 #include <iostream>

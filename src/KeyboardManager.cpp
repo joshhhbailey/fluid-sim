@@ -1,3 +1,7 @@
+///
+/// @file KeyboardManager.cpp
+/// @brief Manages keyboard inputs from the user
+
 #include "KeyboardManager.h"
 
 #include <iostream>

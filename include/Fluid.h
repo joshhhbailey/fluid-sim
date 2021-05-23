@@ -1,3 +1,14 @@
+/// \brief Updates all fluid parameters
+/// \author Josh Bailey
+/// \version 1.0
+/// \date 23/05/21 Updated to NCCA Coding Standard
+/// Revision History:
+///
+/// \todo
+
+#ifndef FLUID_H_
+#define FLUID_H_
+
 #include <SDL2/SDL.h>
 
 #include "Texture.h"
@@ -57,3 +68,5 @@ class Fluid
         SDL_Renderer* m_renderer;
         Texture m_arrow;
 };
+
+#endif  // _FLUID_H_
