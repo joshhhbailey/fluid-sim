@@ -9,3 +9,5 @@
 
 ## Overview
 ...
+
+[![Video](fluid-sim-screenshot.png)](https://youtu.be/RKW-s_EqwXM)
