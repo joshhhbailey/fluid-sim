@@ -4,6 +4,7 @@
 
 #include "KeyboardManager.h"
 
+#include <cstring>	// Linux fix for memcpy
 #include <iostream>
 
 KeyboardManager::KeyboardManager()

@@ -16,8 +16,8 @@ set(CMAKE_CXX_EXTENSIONS ON)
 # Set the name of the executable we want to build
 add_executable(${TargetName})
 
-# Mac specific setup
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+# Mac or Linux specific setup
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     # Find SDL2 packages
     set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
     find_package(SDL2 REQUIRED COMPONENTS main)
