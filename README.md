@@ -11,7 +11,7 @@
   - [Controls](#controls)
 
 ## Overview
-A real-time grid based fluid simulation, build using SDL2. Based on the paper <i>Real-Time Fluid Dynamics for Games</i> by Jos Stam.
+A real-time grid based fluid simulation, built using SDL2. Based on the paper <i>Real-Time Fluid Dynamics for Games</i> by Jos Stam.
 
 ## Controls
 - G: Toggle fluid resolution grid
