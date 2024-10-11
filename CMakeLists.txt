@@ -32,10 +32,10 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR ${CMAKE_SYSTEM_NAME} MATCHES "Linux"
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     # Find SDL2 packages
     find_package(SDL2 CONFIG REQUIRED)
-    find_package(sdl2-image CONFIG REQUIRED)
+    find_package(SDL2_image CONFIG REQUIRED)
     # Link SDL2 packages
     target_link_libraries(${TargetName} PRIVATE SDL2::SDL2 SDL2::SDL2main)
-    target_link_libraries(${TargetName} PRIVATE SDL2::SDL2_image)
+    target_link_libraries(${TargetName} PRIVATE SDL2_image::SDL2_image)
 endif()
 
 include_directories(
