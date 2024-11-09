@@ -22,20 +22,17 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR ${CMAKE_SYSTEM_NAME} MATCHES "Linux"
     set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
     find_package(SDL2 REQUIRED COMPONENTS main)
     find_package(SDL2_image)
-    include_directories(${SDL2_INCLUDE_DIRS} ${SDL2main_INCLUDE_DIRS} ${CMAKE_BINARY_DIR})
-    include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
+    include_directories(${SDL2_INCLUDE_DIRS} ${SDL2main_INCLUDE_DIRS} ${CMAKE_BINARY_DIR} ${SDL2_IMAGE_INCLUDE_DIRS})
     # Link SDL2 packages
-    target_link_libraries(${TargetName} PRIVATE ${SDL2_LIBRARY})
-    target_link_libraries(${TargetName} PRIVATE ${SDL2_IMAGE_LIBRARY})
+    target_link_libraries(${TargetName} PRIVATE ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARY})
 
 # Windows specific setup
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     # Find SDL2 packages
     find_package(SDL2 CONFIG REQUIRED)
-    find_package(SDL2_image CONFIG REQUIRED)
+    find_package(SDL2_image)
     # Link SDL2 packages
-    target_link_libraries(${TargetName} PRIVATE SDL2::SDL2 SDL2::SDL2main)
-    target_link_libraries(${TargetName} PRIVATE SDL2_image::SDL2_image)
+    target_link_libraries(${TargetName} PRIVATE SDL2::SDL2 SDL2::SDL2main SDL2_image::SDL2_image)
 endif()
 
 include_directories(
